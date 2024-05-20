@@ -4,7 +4,7 @@ class ZCL_MATRIX definition
   final
   create private .
 
-public section.
+public section.      
 
   methods ADDITION
     importing
