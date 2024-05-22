@@ -1,0 +1,185 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<abapGit version="v1.0.0" serializer="LCL_OBJECT_CLAS" serializer_version="v1.0.0">
+ <asx:abap xmlns:asx="http://www.sap.com/abapxml" version="1.0">
+  <asx:values>
+   <VSEOCLASS>
+    <CLSNAME>ZCL_VECTOR</CLSNAME>
+    <LANGU>E</LANGU>
+    <DESCRIPT>π SAP : Vector and Tensor</DESCRIPT>
+    <STATE>1</STATE>
+    <CLSCCINCL>X</CLSCCINCL>
+    <FIXPT>X</FIXPT>
+    <UNICODE>X</UNICODE>
+   </VSEOCLASS>
+   <DESCRIPTIONS>
+    <SEOCOMPOTX>
+     <CMPNAME>KINDS</CMPNAME>
+     <LANGU>E</LANGU>
+     <DESCRIPT>return the kind</DESCRIPT>
+    </SEOCOMPOTX>
+    <SEOCOMPOTX>
+     <CMPNAME>PROJECTIONS</CMPNAME>
+     <LANGU>E</LANGU>
+     <DESCRIPT>projections</DESCRIPT>
+    </SEOCOMPOTX>
+    <SEOCOMPOTX>
+     <CMPNAME>SCALAR_PRODUCTS</CMPNAME>
+     <LANGU>E</LANGU>
+     <DESCRIPT>scalar product</DESCRIPT>
+    </SEOCOMPOTX>
+   </DESCRIPTIONS>
+   <DESCRIPTIONS_SUB>
+    <SEOSUBCOTX>
+     <CMPNAME>ALL_ONES</CMPNAME>
+     <SCONAME>V</SCONAME>
+     <LANGU>E</LANGU>
+     <DESCRIPT>π SAP : Vector and Tensor</DESCRIPT>
+    </SEOSUBCOTX>
+    <SEOSUBCOTX>
+     <CMPNAME>KINDS</CMPNAME>
+     <SCONAME>V</SCONAME>
+     <LANGU>E</LANGU>
+     <DESCRIPT>π SAP : Vector and Tensor</DESCRIPT>
+    </SEOSUBCOTX>
+    <SEOSUBCOTX>
+     <CMPNAME>MAGNITUDES</CMPNAME>
+     <SCONAME>V1</SCONAME>
+     <LANGU>E</LANGU>
+     <DESCRIPT>π SAP : Vector and Tensor</DESCRIPT>
+    </SEOSUBCOTX>
+    <SEOSUBCOTX>
+     <CMPNAME>OUTER_PRODUCT</CMPNAME>
+     <SCONAME>A</SCONAME>
+     <LANGU>E</LANGU>
+     <DESCRIPT>π SAP : Matrices</DESCRIPT>
+    </SEOSUBCOTX>
+    <SEOSUBCOTX>
+     <CMPNAME>OUTER_PRODUCTS</CMPNAME>
+     <SCONAME>A</SCONAME>
+     <LANGU>E</LANGU>
+     <DESCRIPT>π SAP : Matrices</DESCRIPT>
+    </SEOSUBCOTX>
+    <SEOSUBCOTX>
+     <CMPNAME>OUTER_PRODUCTS</CMPNAME>
+     <SCONAME>V2</SCONAME>
+     <LANGU>E</LANGU>
+     <DESCRIPT>π SAP : Vector and Tensor</DESCRIPT>
+    </SEOSUBCOTX>
+    <SEOSUBCOTX>
+     <CMPNAME>PRODUCT</CMPNAME>
+     <SCONAME>A</SCONAME>
+     <LANGU>E</LANGU>
+     <DESCRIPT>π SAP : Matrices</DESCRIPT>
+    </SEOSUBCOTX>
+    <SEOSUBCOTX>
+     <CMPNAME>PRODUCT</CMPNAME>
+     <SCONAME>P</SCONAME>
+     <LANGU>E</LANGU>
+     <DESCRIPT>π SAP : Vector and Tensor</DESCRIPT>
+    </SEOSUBCOTX>
+    <SEOSUBCOTX>
+     <CMPNAME>PRODUCTS</CMPNAME>
+     <SCONAME>A</SCONAME>
+     <LANGU>E</LANGU>
+     <DESCRIPT>π SAP : Matrices</DESCRIPT>
+    </SEOSUBCOTX>
+    <SEOSUBCOTX>
+     <CMPNAME>PRODUCTS</CMPNAME>
+     <SCONAME>P</SCONAME>
+     <LANGU>E</LANGU>
+     <DESCRIPT>π SAP : Vector and Tensor</DESCRIPT>
+    </SEOSUBCOTX>
+    <SEOSUBCOTX>
+     <CMPNAME>PRODUCTS</CMPNAME>
+     <SCONAME>V</SCONAME>
+     <LANGU>E</LANGU>
+     <DESCRIPT>π SAP : Vector and Tensor</DESCRIPT>
+    </SEOSUBCOTX>
+    <SEOSUBCOTX>
+     <CMPNAME>PROJECT</CMPNAME>
+     <SCONAME>P</SCONAME>
+     <LANGU>E</LANGU>
+     <DESCRIPT>π SAP : Vector and Tensor</DESCRIPT>
+    </SEOSUBCOTX>
+    <SEOSUBCOTX>
+     <CMPNAME>PROJECT</CMPNAME>
+     <SCONAME>V1</SCONAME>
+     <LANGU>E</LANGU>
+     <DESCRIPT>π SAP : Vector and Tensor</DESCRIPT>
+    </SEOSUBCOTX>
+    <SEOSUBCOTX>
+     <CMPNAME>PROJECTIONS</CMPNAME>
+     <SCONAME>P</SCONAME>
+     <LANGU>E</LANGU>
+     <DESCRIPT>π SAP : Vector and Tensor</DESCRIPT>
+    </SEOSUBCOTX>
+    <SEOSUBCOTX>
+     <CMPNAME>PROJECTIONS</CMPNAME>
+     <SCONAME>V1</SCONAME>
+     <LANGU>E</LANGU>
+     <DESCRIPT>π SAP : Vector and Tensor</DESCRIPT>
+    </SEOSUBCOTX>
+    <SEOSUBCOTX>
+     <CMPNAME>PROJECTIONS</CMPNAME>
+     <SCONAME>V2</SCONAME>
+     <LANGU>E</LANGU>
+     <DESCRIPT>π SAP : Vector and Tensor</DESCRIPT>
+    </SEOSUBCOTX>
+    <SEOSUBCOTX>
+     <CMPNAME>PROJECTS</CMPNAME>
+     <SCONAME>P</SCONAME>
+     <LANGU>E</LANGU>
+     <DESCRIPT>π SAP : Vector and Tensor</DESCRIPT>
+    </SEOSUBCOTX>
+    <SEOSUBCOTX>
+     <CMPNAME>PROJECTS</CMPNAME>
+     <SCONAME>V1</SCONAME>
+     <LANGU>E</LANGU>
+     <DESCRIPT>π SAP : Vector and Tensor</DESCRIPT>
+    </SEOSUBCOTX>
+    <SEOSUBCOTX>
+     <CMPNAME>PROJECTS</CMPNAME>
+     <SCONAME>V2</SCONAME>
+     <LANGU>E</LANGU>
+     <DESCRIPT>π SAP : Vector and Tensor</DESCRIPT>
+    </SEOSUBCOTX>
+    <SEOSUBCOTX>
+     <CMPNAME>SCALAR_PRODUCTS</CMPNAME>
+     <SCONAME>V1</SCONAME>
+     <LANGU>E</LANGU>
+     <DESCRIPT>π SAP : Vector and Tensor</DESCRIPT>
+    </SEOSUBCOTX>
+    <SEOSUBCOTX>
+     <CMPNAME>SCALAR_PRODUCTS</CMPNAME>
+     <SCONAME>V2</SCONAME>
+     <LANGU>E</LANGU>
+     <DESCRIPT>π SAP : Vector and Tensor</DESCRIPT>
+    </SEOSUBCOTX>
+    <SEOSUBCOTX>
+     <CMPNAME>SET_ELEMENTS</CMPNAME>
+     <SCONAME>ADD_TO</SCONAME>
+     <LANGU>E</LANGU>
+     <DESCRIPT>Boolean Variable (X = True, - = False, Space = Unknown)</DESCRIPT>
+    </SEOSUBCOTX>
+    <SEOSUBCOTX>
+     <CMPNAME>SET_ELEMENTS</CMPNAME>
+     <SCONAME>SUB_FROM</SCONAME>
+     <LANGU>E</LANGU>
+     <DESCRIPT>Boolean Variable (X = True, - = False, Space = Unknown)</DESCRIPT>
+    </SEOSUBCOTX>
+    <SEOSUBCOTX>
+     <CMPNAME>SHAPES</CMPNAME>
+     <SCONAME>V</SCONAME>
+     <LANGU>E</LANGU>
+     <DESCRIPT>π SAP: Vector and Tensor</DESCRIPT>
+    </SEOSUBCOTX>
+    <SEOSUBCOTX>
+     <CMPNAME>TO_ARRAYS</CMPNAME>
+     <SCONAME>V</SCONAME>
+     <LANGU>E</LANGU>
+     <DESCRIPT>π SAP: Vector and Tensor</DESCRIPT>
+    </SEOSUBCOTX>
+   </DESCRIPTIONS_SUB>
+  </asx:values>
+ </asx:abap>
+</abapGit>

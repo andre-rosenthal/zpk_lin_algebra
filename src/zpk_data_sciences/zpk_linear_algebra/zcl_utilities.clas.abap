@@ -1,137 +1,131 @@
-class ZCL_UTILITIES definition
+class zcl_utilities definition
   public
-  inheriting from ZCL_PYSAP
+  inheriting from zcl_pysap
   create public .
 
-public section.
+  public section.
 
-  types:
-    laplacian type standard table of ref to object .
-  types:
-    rspace    type standard table of ref to object .
-  types:
-    begin of dimension,
+    types:
+      begin of dimension,
         row type i,
         col type i,
       end of dimension .
-  types AXIS type ref to DATA .
-  types RANK type I .
+    types axis type ref to data .
+    types rank type i .
 
-  constants TYPE type C value 'T' ##NO_TEXT.
-  constants LIKE type C value 'L' ##NO_TEXT.
-  constants F1 type FLOAT value 1 ##NO_TEXT.
-  constants F0 type FLOAT value 0 ##NO_TEXT.
-  constants I1 type I value 1 ##NO_TEXT.
-  constants I0 type I value 0 ##NO_TEXT.
+    constants type type c value 'T' ##NO_TEXT.
+    constants like type c value 'L' ##NO_TEXT.
+    constants i1 type i value 1 ##NO_TEXT.
+    constants i0 type i value 0 ##NO_TEXT.
 
-  class-methods IS_SAME
-    importing
-      !OBJ_1 type ref to OBJECT
-      !OBJ_2 type ref to OBJECT
-    returning
-      value(BOOL) type BOOLEAN .
-  class-methods HEAP_ADDRESS
-    importing
-      !OBJ type ref to OBJECT
-    returning
-      value(S) type STRING .
-  class-methods PROPAGATE_COLUMNS
-    importing
-      !COLUMN type ref to DATA
-      !TIMES type I
-      !RESIZE type BOOLEAN default ABAP_TRUE
-    exporting
-      !COMPS type ABAP_COMPONENT_TAB
-      !TABLE type ref to DATA
-      !LINE type ANY .
-  class-methods CREATE_TYPED_STRUCT_OF_LEN_N
-    importing
-      !KIND type ABAP_TYPEKIND
-      !LEN type I
-    exporting
-      !STRUCT type ref to DATA .
-  class-methods CREATE_TYPE_FROM_KIND
-    importing
-      !KIND type ABAP_TYPEKIND
-    exporting
-      !TYPE type ref to DATA .
-  class-methods CREATE_DYNAMIC_TABLE_TYPE_T
-    importing
-      !TYPE type ref to DATA optional
-    exporting
-      !TABLE type DATA
-      !LINE type ANY .
-  class-methods CREATE_DYNAMIC_TABLE_LIKE_T
-    importing
-      !TYPE type ANY
-    exporting
-      !TABLE type ref to DATA
-      !LINE type ANY .
-  class-methods IS_NUMERIC
-    importing
-      !VAR type ANY
-    returning
-      value(BOOL) type BOOLEAN .
-  class-methods IS_INTEGER
-    importing
-      !VAR type ANY
-    returning
-      value(BOOL) type BOOLEAN .
-  class-methods IS_TABLE
-    importing
-      !VAR type ANY
-    returning
-      value(BOOL) type BOOLEAN .
-  class-methods IS_STRUCT
-    importing
-      !VAR type ANY
-    returning
-      value(BOOL) type BOOLEAN .
-  class-methods IS_REF
-    importing
-      !VAR type ANY
-    returning
-      value(BOOL) type BOOLEAN .
-  class-methods IS_SAME_KIND
-    importing
-      !KIND_A type ABAP_TYPEKIND
-      !KIND_B type ABAP_TYPEKIND optional
-      !VAR type ref to DATA optional
-    returning
-      value(BOOL) type ABAP_BOOL .
-  class-methods IS_TRUE
-    importing
-      !VAL type ANY
-    returning
-      value(BOOL) type BOOLEAN .
-  class-methods GET_REF_OF_ROW
-    importing
-      !VAR type ANY optional
-      !ROW type I default 1
-    preferred parameter VAR
-    returning
-      value(REF) type ref to DATA .
-protected section.
+    class-methods is_same
+      importing
+        !obj_1      type ref to object
+        !obj_2      type ref to object
+      returning
+        value(bool) type boolean .
+    class-methods heap_address
+      importing
+        !obj     type ref to object
+      returning
+        value(s) type string .
+    class-methods propagate_columns
+      importing
+        !column type ref to data
+        !times  type i
+        !resize type boolean default abap_true
+      exporting
+        !comps  type abap_component_tab
+        !table  type ref to data
+        !line   type any .
+    class-methods create_typed_struct_of_len_n
+      importing
+        !kind   type abap_typekind
+        !len    type i
+      exporting
+        !struct type ref to data .
+    class-methods create_type_from_kind
+      importing
+        !kind type abap_typekind
+      exporting
+        !type type ref to data .
+    class-methods create_dynamic_table_type_t
+      importing
+        !type  type ref to data optional
+      exporting
+        !table type data
+        !line  type any .
+    class-methods create_dynamic_table_like_t
+      importing
+        !type  type any
+      exporting
+        !table type ref to data
+        !line  type any .
+    class-methods is_numeric
+      importing
+        !var        type any
+      returning
+        value(bool) type boolean .
+    class-methods is_integer
+      importing
+        !var        type any
+      returning
+        value(bool) type boolean .
+    class-methods is_table
+      importing
+        !var        type any
+      returning
+        value(bool) type boolean .
+    class-methods is_struct
+      importing
+        !var        type any
+      returning
+        value(bool) type boolean .
+    class-methods is_ref
+      importing
+        !var        type any
+      returning
+        value(bool) type boolean .
+    class-methods is_same_kind
+      importing
+        !kind_a     type abap_typekind
+        !kind_b     type abap_typekind optional
+        !var        type ref to data optional
+      returning
+        value(bool) type abap_bool .
+    class-methods is_true
+      importing
+        !val        type any
+      returning
+        value(bool) type boolean .
+    class-methods get_ref_of_row
+      importing
+        !var       type any optional
+        !row       type i default 1
+          preferred parameter var
+      returning
+        value(ref) type ref to data .
+  protected section.
 
-  class-methods IS_GENERIC
-    importing
-      !VAR type ANY
-      !KIND type ANY
-    returning
-      value(BOOL) type BOOLEAN .
-  class-methods DESCRIBE
-    importing
-      !VAR type ANY
-    returning
-      value(TYPE_DES) type ref to CL_ABAP_TYPEDESCR .
-  class-methods CREATE_GENERIC_DYNAMIC_TABLE
-    importing
-      !SOURCE type ref to DATA optional
-      !TYPE type ANY optional
-      !MODE type C
-    exporting
-      !TABLE type ref to DATA
-      !LINE type ANY .
+    class-methods is_generic
+      importing
+        !var        type any
+        !kind       type any
+      returning
+        value(bool) type boolean .
+    class-methods describe
+      importing
+        !var            type any
+      returning
+        value(type_des) type ref to cl_abap_typedescr .
+    class-methods create_generic_dynamic_table
+      importing
+        !source type ref to data optional
+        !type   type any optional
+        !mode   type c
+      exporting
+        !table  type ref to data
+        !line   type any .
   private section.
     class-data var type ref to data .
 ENDCLASS.
@@ -244,7 +238,7 @@ CLASS ZCL_UTILITIES IMPLEMENTATION.
         elem_des ?= cl_abap_elemdescr=>get_c( 1 ).
       when cl_abap_datadescr=>typekind_decfloat or cl_abap_datadescr=>typekind_decfloat16 or
            cl_abap_datadescr=>typekind_decfloat34 or cl_abap_datadescr=>typekind_float.
-        elem_des ?= cl_abap_elemdescr=>get_f( ).
+        elem_des ?= cl_abap_elemdescr=>get_decfloat34(  ).
       when cl_abap_datadescr=>typekind_hex.
         elem_des ?= cl_abap_elemdescr=>get_x( 1 ).
       when cl_abap_datadescr=>typekind_int or cl_abap_datadescr=>typekind_int1 or

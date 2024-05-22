@@ -12,7 +12,7 @@ class zcl_array definition
         !kind type abap_typekind .
     methods getdim
       returning
-        value(d) type i .
+        value(d) type zcl_utilities=>dimension .
     methods getdata
       returning
         value(dat) type ref to data .
@@ -51,7 +51,6 @@ class zcl_array definition
       returning
         value(v) type ref to zcl_vector .
   protected section.
-    data dim type i .
     data arr type ref to data.
     data dtype type abap_typekind.
     data datum type ref to data.
@@ -260,7 +259,7 @@ CLASS ZCL_ARRAY IMPLEMENTATION.
     if ( zcl_utilities=>is_integer( <fs_a>[ 1 ] ) ).
       kind =  cl_abap_datadescr=>typekind_int.
     else.
-      kind =  cl_abap_datadescr=>typekind_float.
+      kind =  cl_abap_datadescr=>typekind_decfloat34.
     endif.
     w ?= zcl_vector=>create_instance( kind = kind rank = lines( <fs_a> ) ).
     ref ?= w->get_container( ).

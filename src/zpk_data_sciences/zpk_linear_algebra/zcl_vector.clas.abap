@@ -23,7 +23,7 @@ public section.
   class-methods BASIS
     importing
       !V type ref to ZCL_VECTOR optional
-      !VRANK type I optional
+      !VLENGHT type I optional
       !KIND type ABAP_TYPEKIND optional
     returning
       value(SPACE_BASE) type ref to DATA .
@@ -34,7 +34,7 @@ public section.
       !DEEP type BOOLEAN default ABAP_FALSE
       !KIND type ABAP_TYPEKIND
       !RAND type BOOLEAN default ABAP_FALSE
-      !RANK type I default 3
+      !LENGHT type I default 3
     returning
       value(V) type ref to OBJECT .
   methods CROSS_PRODUCT
@@ -44,7 +44,7 @@ public section.
       value(CROSS) type ref to ZCL_VECTOR .
   class-methods CROSS_PRODUCTS
     importing
-      !VS type ZCL_UTILITIES=>RSPACE
+      !VS type ZCL_EIGENSPACE=>RSPACE
     returning
       value(CROSS) type ref to ZCL_VECTOR .
   methods DOT_PRODUCT
@@ -77,6 +77,30 @@ public section.
       !V1 type ref to ZCL_VECTOR
     returning
       value(CONTAINER) type ZCL_UTILITIES=>AXIS .
+  methods GET_ELEMENT
+    importing
+      !I type I
+    returning
+      value(VALUE) type DECFLOAT34 .
+  class-methods GET_ELEMENTS
+    importing
+      !I type I
+      !V type ref to ZCL_VECTOR
+    returning
+      value(VALUE) type DECFLOAT34 .
+  class-methods KINDS
+    importing
+      !V type ref to ZCL_VECTOR
+    returning
+      value(KIND) type ABAP_TYPEKIND .
+  methods MAGNITUDE
+    returning
+      value(MAG) type DECFLOAT34 .
+  class-methods MAGNITUDES
+    importing
+      !V1 type ref to ZCL_VECTOR
+    returning
+      value(MAG) type DECFLOAT34 .
   methods NORMALIZE
     returning
       value(V1_NORM) type ref to ZCL_VECTOR .
@@ -86,6 +110,53 @@ public section.
       !KIND type ABAP_TYPEKIND
     returning
       value(V1_NORM) type ref to ZCL_VECTOR .
+  methods OUTER_PRODUCT
+    importing
+      !V1 type ref to ZCL_VECTOR
+    returning
+      value(A) type ref to ZCL_MATRIX .
+  class-methods OUTER_PRODUCTS
+    importing
+      !V1 type ref to ZCL_VECTOR
+      !V2 type ref to ZCL_VECTOR
+    returning
+      value(A) type ref to ZCL_MATRIX .
+  methods PRODUCT
+    importing
+      !A type ref to ZCL_MATRIX
+    returning
+      value(P) type ref to ZCL_VECTOR .
+  class-methods PRODUCTS
+    importing
+      !V type ref to ZCL_VECTOR
+      !A type ref to ZCL_MATRIX
+    returning
+      value(P) type ref to ZCL_VECTOR .
+  methods PROJECT
+    importing
+      !V1 type ref to ZCL_VECTOR
+    returning
+      value(P) type ref to ZCL_VECTOR .
+  class-methods PROJECTIONS
+    importing
+      !V1 type ref to ZCL_VECTOR
+      !V2 type ref to ZCL_VECTOR
+    returning
+      value(P) type ref to ZCL_VECTOR .
+  class-methods PROJECTS
+    importing
+      !V1 type ref to ZCL_VECTOR
+      !V2 type ref to ZCL_VECTOR
+    returning
+      value(P) type ref to ZCL_VECTOR .
+  methods RANK
+    returning
+      value(LENGHT) type I .
+  class-methods RANKS
+    importing
+      !V type ref to ZCL_VECTOR
+    returning
+      value(LENGHT) type I .
   methods SCALAR_MULTIPLICATION
     importing
       !A type ANY
@@ -97,6 +168,49 @@ public section.
       !V1 type ref to ZCL_VECTOR
     returning
       value(V2) type ref to ZCL_VECTOR .
+  class-methods SCALAR_PRODUCTS
+    importing
+      !V1 type ref to ZCL_VECTOR
+      !V2 type ref to ZCL_VECTOR
+    returning
+      value(SPROD) type DECFLOAT34 .
+  methods SUB_FROM_ELEMENT
+    importing
+      !I type I
+      value(VALUE) type DECFLOAT34 .
+  methods ADD_TO_ELEMENT
+    importing
+      !I type I
+      value(VALUE) type DECFLOAT34 .
+  methods SET_ELEMENT
+    importing
+      !I type I
+      value(VALUE) type ANY .
+  class-methods SUB_FROM_ELEMENTS
+    importing
+      !I type I
+      !V type ref to ZCL_VECTOR
+      value(VALUE) type DECFLOAT34 .
+  class-methods ADD_TO_ELEMENTS
+    importing
+      !I type I
+      !V type ref to ZCL_VECTOR
+      value(VALUE) type DECFLOAT34 .
+  class-methods SET_ELEMENTS
+    importing
+      !I type I
+      !V type ref to ZCL_VECTOR
+      value(VALUE) type DECFLOAT34
+      !ADD_TO type BOOLEAN default ABAP_FALSE
+      !SUB_FROM type BOOLEAN default ABAP_FALSE .
+  methods SHAPE
+    returning
+      value(SHP) type ref to DATA .
+  class-methods SHAPES
+    importing
+      !V type ref to ZCL_VECTOR
+    returning
+      value(SHP) type ref to DATA .
   methods SUBTRACTION
     importing
       !V2 type ref to ZCL_VECTOR
@@ -108,6 +222,14 @@ public section.
       !V2 type ref to ZCL_VECTOR
     returning
       value(V3) type ref to ZCL_VECTOR .
+  methods TO_ARRAY
+    returning
+      value(ARR) type ref to ZCL_ARRAY .
+  class-methods TO_ARRAYS
+    importing
+      !V type ref to ZCL_VECTOR
+    returning
+      value(ARR) type ref to ZCL_ARRAY .
   methods TO_STRING
     returning
       value(S) type STRING .
@@ -128,49 +250,27 @@ public section.
       !VROW type ref to DATA optional
     returning
       value(TRANSP) type ref to DATA .
-  methods TO_ARRAY
-    returning
-      value(ARR) type ref to ZCL_ARRAY .
-  class-methods TO_ARRAYS
+  methods ALL_ONE .
+  class-methods ALL_ONES
     importing
-      !V type ref to ZCL_VECTOR
-    returning
-      value(ARR) type ref to ZCL_ARRAY .
-  methods SHAPE
-    returning
-      value(SHP) type ref to DATA .
-  class-methods SHAPES
-    importing
-      !V type ref to ZCL_VECTOR
-    returning
-      value(SHP) type ref to DATA .
-  class-methods RANKS
-    importing
-      !V type ref to ZCL_VECTOR
-    returning
-      value(RANK) type I .
-  class-methods KINDS
-    importing
-      !V type ref to ZCL_VECTOR
-    returning
-      value(KIND) type ABAP_TYPEKIND .
-  protected section.
+      !V type ref to ZCL_VECTOR .
+protected section.
 
-    data kind type abap_typekind .
-    data random type ref to cl_random_number .
-    data axis type zcl_utilities=>axis .
-    data rank type zcl_utilities=>rank .
-    data type type ref to data .
-    class-data vt type ref to zcl_vector .
+  data KIND type ABAP_TYPEKIND .
+  data RANDOM type ref to CL_RANDOM_NUMBER .
+  data AXIS type ZCL_UTILITIES=>AXIS .
+  data lenght type ZCL_UTILITIES=>rank .
+  data TYPE type ref to DATA .
+  class-data VT type ref to ZCL_VECTOR .
 
-    methods constructor
-      importing
-        !axis type zcl_utilities=>axis optional
-        !v1   type ref to zcl_vector optional
-        !deep type boolean default abap_false
-        !kind type abap_typekind
-        !rand type boolean default abap_false
-        !rank type i .
+  methods CONSTRUCTOR
+    importing
+      !AXIS type ZCL_UTILITIES=>AXIS optional
+      !V1 type ref to ZCL_VECTOR optional
+      !DEEP type BOOLEAN default ABAP_FALSE
+      !KIND type ABAP_TYPEKIND
+      !RAND type BOOLEAN default ABAP_FALSE
+      !lenght type I .
 private section.
 
   class-methods _DUPLICATE
@@ -214,6 +314,35 @@ CLASS ZCL_VECTOR IMPLEMENTATION.
   endmethod.
 
 
+  method ADD_TO_ELEMENT.
+    add_to_elements( v = me i = i value = value ).
+  endmethod.
+
+
+  method ADD_TO_ELEMENTS.
+    set_elements( v = v i = i value = value add_to = abap_true ).
+  endmethod.
+
+
+  method all_one.
+    zcl_vector=>all_ones( me ).
+  endmethod.
+
+
+  method all_ones.
+    data:
+       i  type i.
+    field-symbols:
+      <fs_v> type standard table,
+      <fs_x> type any.
+
+    deref v <fs_v>.
+    forx i 1 v->lenght.
+      v->set_element( i = i value = one ).
+    endfor i.
+  endmethod.
+
+
   method base.
     space_base ?=  basis( v = me ).
   endmethod.
@@ -225,30 +354,30 @@ CLASS ZCL_VECTOR IMPLEMENTATION.
       vy   type ref to zcl_vector,
       i    type i,
       j    type i,
-      rank type i.
+      lenght type i.
     field-symbols:
       <fs_axis>  type standard table,
       <fs_space> type standard table.
 
     i = 1.
-    create data space_base type zcl_utilities=>rspace.
+    create data space_base type zcl_eigenspace=>rspace.
     assign space_base->* to <fs_space>.
     if v is bound.
-      rank = v->rank.
+      lenght = v->lenght.
       vy ?= v.
     else.
-      rank = vrank.
-      vy ?= create_instance( kind = kind rank = rank ).
+      lenght = vlenght.
+      vy ?= create_instance( kind = kind lenght = lenght ).
     endif.
-    do rank times.
+    do lenght times.
       vx ?= _duplicate( vy ).
       assign vx->axis->* to <fs_axis>.
       j = 1.
-      do vx->rank times.
+      do vx->lenght times.
         clear <fs_axis>[ j ].
         add 1 to j.
       enddo.
-      <fs_axis>[ i ] = zcl_utilities=>f1.
+      <fs_axis>[ i ] = one.
       insert vx into table <fs_space>.
       add 1 to i.
     enddo.
@@ -287,7 +416,7 @@ CLASS ZCL_VECTOR IMPLEMENTATION.
         assign v1->axis->* to <fs_y>.
         <fs_x>[] = <fs_y>[].
       endif.
-      me->rank = lines( <fs_y> ).
+      me->lenght = lines( <fs_y> ).
     else.
       call method zcl_utilities=>create_type_from_kind
         exporting
@@ -308,7 +437,7 @@ CLASS ZCL_VECTOR IMPLEMENTATION.
       if rand = abap_true.
         random = new cl_random_number( ).
         random->if_random_number~init( ).
-        do rank times.
+        do lenght times.
           insert initial line into table <fs_x> assigning <fs_t>.
           if int = abap_true.
             <fs_t> = random->if_random_number~get_random_int( i_limit = 1024 ).
@@ -316,10 +445,10 @@ CLASS ZCL_VECTOR IMPLEMENTATION.
             <fs_t> = random->if_random_number~get_random_float( ).
           endif.
         enddo.
-        me->rank = rank.
+        me->lenght = lenght.
       else.
-        me->rank = rank.
-        do rank times.
+        me->lenght = lenght.
+        do lenght times.
           insert initial line into table <fs_x>.
         enddo.
       endif.
@@ -328,13 +457,13 @@ CLASS ZCL_VECTOR IMPLEMENTATION.
 
 
   method create_instance.
-    v ?= new zcl_vector( axis = x v1 = v1 deep = deep kind = kind rand = rand rank = rank ).
+    v ?= new zcl_vector( axis = x v1 = v1 deep = deep kind = kind rand = rand lenght = lenght ).
   endmethod.
 
 
   method cross_product.
     data:
-        set type zcl_utilities=>rspace.
+        set type zcl_eigenspace=>rspace.
 
     insert me into table set.
     insert v2 into table set.
@@ -347,14 +476,14 @@ CLASS ZCL_VECTOR IMPLEMENTATION.
       i           type i,
       j           type i,
       k           type i,
-      rank        type i,
-      det         type f,
-      dets        type standard table of f,
+      lenght        type i,
+      det         type decfloat34,
+      dets        type standard table of decfloat34,
       axis        type ref to data,
       laplace_det type ref to data,
       container   type ref to data,
       dim         type zcl_utilities=>dimension,
-      laplacian   type zcl_utilities=>laplacian,
+      laplacian   type zcl_eigenspace=>laplacian,
       laplace     type ref to zcl_matrix,
       base_set    type ref to data,
       base        type ref to zcl_vector,
@@ -362,7 +491,7 @@ CLASS ZCL_VECTOR IMPLEMENTATION.
       v           type ref to zcl_vector,
       vector      type ref to zcl_vector.
     field-symbols:
-      <fs_space>     type zcl_utilities=>rspace,
+      <fs_space>     type zcl_eigenspace=>rspace,
       <fs_laplace>   type any,
       <fs_axis>      type standard table,
       <fs_container> type standard table,
@@ -383,18 +512,18 @@ CLASS ZCL_VECTOR IMPLEMENTATION.
         i = 1.
         do lines( vs ) times.
           vector ?= vs[ i ].
-          if rank = 0.
-            rank = vector->rank.
+          if lenght = 0.
+            lenght = vector->lenght.
           else.
-            if rank <> vector->rank.
+            if lenght <> vector->lenght.
               return.
             endif.
           endif.
           add 1 to i.
         enddo.
-        check rank - 1 = lines( vs ).
-        dim-row = vector->rank.
-        dim-col = vector->rank.
+        check lenght - 1 = lines( vs ).
+        dim-row = vector->lenght.
+        dim-col = vector->lenght.
         base_set ?= zcl_vector=>basis( v = vector ).
         " the Laplacian contains a matrix of matrix for each vector + base combination
         assign base_set->* to <fs_space>.
@@ -431,7 +560,7 @@ CLASS ZCL_VECTOR IMPLEMENTATION.
           insert det into table dets.
         endloop.
         get reference of dets into laplace_det.
-        v ?= zcl_vector=>create_instance( x = laplace_det kind = vector->kind rank = rank  ).
+        v ?= zcl_vector=>create_instance( x = laplace_det kind = vector->kind lenght = lenght  ).
         cross ?= zcl_vector=>_duplicate( v ).
     endcase.
   endmethod.
@@ -485,13 +614,13 @@ CLASS ZCL_VECTOR IMPLEMENTATION.
     check v1 is bound and v2 is bound.
     v3 ?= _overrider( v1 ).
     if v3 is initial.
-      v3 = new #( kind = v1->kind rank = v1->rank ).
+      v3 = new #( kind = v1->kind lenght = v1->lenght ).
       assign v3->axis->* to <fs_z>.
     elseif zcl_utilities=>is_same( obj_1 = v1 obj_2 = v3 ).
       vt ?= _duplicate( v1 = v1 ).
       assign vt->axis->* to <fs_z>.
     else.
-      check v3->rank = v1->rank.
+      check v3->lenght = v1->lenght.
       assign v3->axis->* to <fs_z>.
     endif.
     assign v1->axis->* to <fs_x>.
@@ -512,13 +641,48 @@ CLASS ZCL_VECTOR IMPLEMENTATION.
   endmethod.
 
 
-  method KINDS.
+  method get_element.
+    value = get_elements( v = me i = i ).
+  endmethod.
+
+
+  method get_elements.
+    field-symbols:
+      <fs_v> type standard table.
+
+    deref v <fs_v>.
+    check i > 0 and i <= lines( <fs_v> ).
+    value = <fs_v>[ i ].
+  endmethod.
+
+
+  method kinds.
     kind = v->kind.
+  endmethod.
+
+
+  method magnitude.
+    mag = zcl_vector=>magnitudes( me ).
+  endmethod.
+
+
+  method magnitudes.
+    data:
+       i type i.
+    field-symbols:
+       <fs_v1> type standard table.
+
+    deref v1 <fs_v1>.
+    for i v1->lenght.
+      mag = mag + <fs_v1>[ i ] ** 2.
+    endfor i.
+    mag = sqrt( mag ).
   endmethod.
 
 
   method normalize.
     v1_norm ?= normalizes( v1 = me kind = me->kind ).
+    me->axis ?= v1_norm->axis.
   endmethod.
 
 
@@ -562,8 +726,139 @@ CLASS ZCL_VECTOR IMPLEMENTATION.
   endmethod.
 
 
+  method outer_product.
+    a ?= outer_products( v1 = me v2 = v1 ).
+  endmethod.
+
+
+  method outer_products.
+    data:
+      i   type i,
+      dim type zcl_utilities=>dimension,
+      j   type i.
+    field-symbols:
+      <fs_v1>  type standard table,
+      <fs_v2>  type standard table,
+      <fs_a>   type standard table,
+      <fs_aij> type any.
+
+    dim-row = v1->lenght.
+    dim-col = dim-row.
+    dpreparem a <fs_a>.
+    deref v1 <fs_v1>.
+    deref v2 <fs_v2>.
+    for i dim-row.
+      for j dim-col.
+        m_i_j j <fs_a> i <fs_aij>.
+        <fs_aij> = <fs_v1>[ i ] * <fs_v2>[ j ].
+      endfor j.
+    endfor i.
+  endmethod.
+
+
+  method product.
+    p ?= products( a = a v = me ).
+  endmethod.
+
+
+  method products.
+    data:
+      i   type i,
+      j   type i,
+      dim type zcl_utilities=>dimension.
+    field-symbols:
+      <fs_a>   type standard table,
+      <fs_v>   type standard table,
+      <fs_p>   type standard table,
+      <fs_aij> type any.
+
+    deref a <fs_a>.
+    deref v <fs_v>.
+    dpreparev p <fs_p> v.
+    dim-row = a->dimension( )-row.
+    dim-col = a->dimension( )-col.
+    for i dim-row.
+      for j dim-col.
+        m_i_j j <fs_a> i <fs_aij>.
+        <fs_p>[ i ] = <fs_p>[ i ] + <fs_aij> * <fs_v>[ j ].
+      endfor j.
+    endfor i.
+  endmethod.
+
+
+  method project.
+    p ?= projects( v1 = me v2 = v1 ).
+  endmethod.
+
+
+  method projections.
+    data:
+      ref     type ref to data,
+      scalar  type decfloat34,
+      factor  type decfloat34,
+      squared type decfloat34,
+      i       type i,
+      j       type i,
+      comp1   type decfloat34,
+      comp2   type decfloat34.
+    field-symbols:
+      <fs_v> type standard table,
+      <fs_u> type standard table,
+      <fs_p> type standard table,
+      <fs_x> type any.
+
+* Scalar product of v1 and v2
+    scalar = zcl_vector=>scalar_products( v1 = v1 v2 = v2 ).
+    deref v1 <fs_v>.
+    deref v2 <fs_u>.
+    i = 1.
+    while i <= v2->lenght.
+      comp2 = <fs_u>[ i ].
+      squared = squared + ( comp2 ** 2 ).
+      i = i + 1.
+    endwhile.
+    if squared <> 0.
+      factor = scalar / squared.
+    endif.
+    dpreparev p <fs_p> v1.
+    i = 1.
+    while i <= v1->lenght.
+      comp2 = <fs_u>[ i ].
+      <fs_p>[ i ] = factor * comp2.
+      i = i + 1.
+    endwhile.
+  endmethod.
+
+
+  method projects.
+    data:
+      ref     type ref to data,
+      dotv1v2 type ref to data,
+      dotv1v1 type ref to data.
+    field-symbols:
+      <fs_p>   type standard table,
+      <fs_d12> type any,
+      <fs_d11> type any.
+
+    dotv1v2 ?= zcl_vector=>dot_products( v1 = v1 v2 = v2 ).
+    dotv1v1 ?= zcl_vector=>dot_products( v1 = v1 v2 = v1 ).
+    assign dotv1v2->* to <fs_d12>.
+    assign dotv1v1->* to <fs_d11>.
+    dpreparev p <fs_p> v1.
+    if <fs_d11> <> 0.
+      free p.
+      p ?= zcl_vector=>scalar_multiplications( a = ( <fs_d12> / <fs_d11> ) v1 = v1 ).
+    endif.
+  endmethod.
+
+
+  method RANK.
+    lenght = me->lenght.
+  endmethod.
+
+
   method RANKS.
-    rank = v->rank.
+    lenght = v->lenght.
   endmethod.
 
 
@@ -580,11 +875,58 @@ CLASS ZCL_VECTOR IMPLEMENTATION.
 
     check v1 is bound.
     v2 ?= _overrider( v1 ).
-    assign v1->axis->* to <fs_x>.
-    assign v2->axis->* to <fs_y>.
+    deref v1 <fs_x>.
+    deref v2 <fs_y>.
     loop at <fs_x> assigning <fs_row>.
       <fs_y>[ sy-tabix ] = <fs_row> * a.
     endloop.
+  endmethod.
+
+
+  method scalar_products.
+    data:
+      ref     type ref to data,
+      squared type decfloat34,
+      factor  type decfloat34,
+      i       type i,
+      j       type i,
+      comp1   type decfloat34,
+      comp2   type decfloat34.
+    field-symbols:
+      <fs_v> type standard table,
+      <fs_u> type standard table,
+      <fs_x> type any.
+
+    deref v1 <fs_v>.
+    deref v2 <fs_u>.
+    i = 1.
+    while i <= v1->lenght.
+      comp1 = <fs_u>[ i ].
+      comp2 = <fs_v>[ i ].
+      sprod = sprod + ( comp1 * comp2 ).
+      i = i + 1.
+    endwhile.
+  endmethod.
+
+
+  method SET_ELEMENT.
+    set_elements( v = me i = i value = value ).
+  endmethod.
+
+
+  method SET_ELEMENTS.
+    field-symbols:
+      <fs_v> type standard table.
+
+    deref v <fs_v>.
+    check i > 0 and i <= lines( <fs_v> ).
+    if add_to = abap_true.
+      <fs_v>[ i ] = <fs_v>[ i ] + value.
+    elseif sub_from = abap_true.
+      <fs_v>[ i ] = <fs_v>[ i ] - value.
+    else.
+      <fs_v>[ i ] = value.
+    endif.
   endmethod.
 
 
@@ -618,6 +960,16 @@ CLASS ZCL_VECTOR IMPLEMENTATION.
   endmethod.
 
 
+  method SUB_FROM_ELEMENT.
+    sub_from_elements( v = me i = i value = value ).
+  endmethod.
+
+
+  method SUB_FROM_ELEMENTS.
+    set_elements( v = v i = i value = value sub_from = abap_true ).
+  endmethod.
+
+
   method to_array.
     arr ?= to_arrays( me ).
   endmethod.
@@ -625,14 +977,14 @@ CLASS ZCL_VECTOR IMPLEMENTATION.
 
   method to_arrays.
     data:
-        array_ type ref to zcl_array,
-        ctnr    type ref to data.
+      array_ type ref to zcl_array,
+      ctnr   type ref to data.
     field-symbols:
       <fs_s> type any,
       <fs_x> type standard table,
       <fs_a> type standard table.
 
-    array_ = new #( dim = v->rank kind = v->kind ).
+    array_ = new #( dim = v->lenght kind = v->kind ).
     ctnr ?= array_->getdata(   ).
     assign ctnr->* to <fs_x>.
     assign v->axis->* to <fs_a>.
@@ -697,7 +1049,7 @@ CLASS ZCL_VECTOR IMPLEMENTATION.
       call method zcl_utilities=>propagate_columns
         exporting
           column = line
-          times  = v->rank
+          times  = v->lenght
         importing
           table  = container
           line   = line.
@@ -707,7 +1059,7 @@ CLASS ZCL_VECTOR IMPLEMENTATION.
       assign transp->* to <fs_row>.
       axis ?= v->get_container( ).
       assign axis->* to <fs_axis>.
-      do v->rank times.
+      do v->lenght times.
         assign component i of structure <fs_row> to <fs_col>.
         <fs_col> = <fs_axis>[ i ].
       enddo.
@@ -722,9 +1074,8 @@ CLASS ZCL_VECTOR IMPLEMENTATION.
       <fs_v1a> type any table,
       <fs_v2a> type any table.
 
-    v2 ?= create_instance( kind = v1->kind rank = v1->rank ).
-    assign v1->axis->* to <fs_v1a>.
-    assign v2->axis->* to <fs_v2a>.
+    dpreparev v2 <fs_v2a> v1.
+    deref v1 <fs_v1a>.
     <fs_v2a> = corresponding #( <fs_v1a> ).
   endmethod.
 
@@ -737,7 +1088,7 @@ CLASS ZCL_VECTOR IMPLEMENTATION.
     check v is bound.
     assign v->axis->* to <fs_av>.
     check <fs_av> is assigned.
-    check v->rank > 0.
+    check v->lenght > 0.
     check v->type is not initial.
     bool = abap_false.
   endmethod.
@@ -748,20 +1099,14 @@ CLASS ZCL_VECTOR IMPLEMENTATION.
       <fs_lhs> type any table.
 
     check v1 is bound.
-    if v2 is initial.
-      v2 = new #( kind = v1->kind rank = v1->rank ).
-    elseif zcl_utilities=>is_same( obj_1 = v1 obj_2 = v2 ).
+    dpreparev v2 <fs_lhs> v1.
+    if zcl_utilities=>is_same( obj_1 = v1 obj_2 = v2 ).
       vt ?= _duplicate( v1 = v1 ).
       v2 ?= _duplicate( v1 = vt ).
-      assign v2->axis->* to <fs_lhs>.
-      if clean = abap_true.
-        clear <fs_lhs>.
-      endif.
-    else.
-      assign v2->axis->* to <fs_lhs>.
-      if clean = abap_true.
-        clear <fs_lhs>.
-      endif.
+    endif.
+    deref v2 <fs_lhs>.
+    if clean = abap_true.
+      clear <fs_lhs>.
     endif.
   endmethod.
 
@@ -783,7 +1128,7 @@ CLASS ZCL_VECTOR IMPLEMENTATION.
     assign v1->axis->* to <fs_x>.
     assign v2->axis->* to <fs_y>.
     if v3 is initial.
-      v3 ?= zcl_vector=>create_instance( kind = v1->kind rank = v1->rank ).
+      v3 ?= zcl_vector=>create_instance( kind = v1->kind lenght = v1->lenght ).
     endif.
     assign v3->axis->* to <fs_z>.
     loop at <fs_x> assigning <fs_idx>.
