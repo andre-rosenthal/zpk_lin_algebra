@@ -346,12 +346,12 @@ protected section.
     importing
       !DIM type ZCL_UTILITIES=>DIMENSION optional
       !SET type BOOLEAN default ABAP_TRUE
-      !A type ref to ZCL_MATRIX
       !ROW type I optional
       !COL type I optional
       !ADD_TO type BOOLEAN default ABAP_FALSE
       !SUB_FROM type BOOLEAN default ABAP_FALSE
     changing
+      !CONTAINER type ref to DATA
       !VALUE type DECFLOAT34 optional .
   class-methods _IS_EMPTY
     importing
@@ -456,38 +456,38 @@ CLASS ZCL_MATRIX IMPLEMENTATION.
 
 
 method add_to_element.
-   data:
-    val type decfloat34.
+  data:
+   val type decfloat34.
 
   val = value.
   call method zcl_matrix=>_get_set_element
     exporting
-      dim    = dim
-      a      = me
-      row    = row
-      col    = col
-      add_to = abap_true
+      dim       = dim
+      row       = row
+      col       = col
+      add_to    = abap_true
     changing
-      value = val.
+      container = me->container
+      value     = val.
 
 endmethod.
 
 
 method add_to_elements.
- data:
-    val type decfloat34.
+  data:
+     val type decfloat34.
 
   val = value.
   call method zcl_matrix=>_get_set_element
     exporting
-      dim    = dim
-      a      = a
-      row    = row
-      col    = col
-      add_to = abap_true
+      dim       = dim
+      row       = row
+      col       = col
+      add_to    = abap_true
     changing
-      value = val.
-  endmethod.
+      container = a->container
+      value     = val.
+endmethod.
 
 
   method alter_col.
@@ -788,13 +788,13 @@ method add_to_elements.
 
     call method zcl_matrix=>_get_set_element
       exporting
-        dim   = dim
-        row   = row
-        col   = col
-        set   = abap_false
-        a     = me
+        dim       = dim
+        row       = row
+        col       = col
+        set       = abap_false
       changing
-        value = value.
+        container = me->container
+        value     = value.
   endmethod.
 
 
@@ -804,8 +804,8 @@ method add_to_elements.
       exporting
         dim   = dim
         set   = abap_false
-        a     = a
       changing
+        container = a->container
         value = value.
   endmethod.
 
@@ -1514,26 +1514,27 @@ endmethod.
 
 
 method set_element.
-data:
-  val type decfloat34.
+  data:
+    val type decfloat34.
 
-val = value.
-call method zcl_matrix=>_get_set_element
-  exporting
-    dim   = dim
-    a     = me
-    row   = row
-    col   = col
-  changing
-    value = val.
+  val = value.
+  call method zcl_matrix=>_get_set_element
+    exporting
+      dim       = dim
+      row       = row
+      col       = col
+    changing
+      container = me->container
+      value     = val.
 endmethod.
 
 
 method set_elements.
-call method zcl_matrix=>_get_set_element
-  exporting
-    dim = dim
-    a   = a.
+  call method zcl_matrix=>_get_set_element
+    exporting
+      dim       = dim
+    changing
+      container = a->container.
 endmethod.
 
 
@@ -1559,39 +1560,38 @@ call method zcl_matrix=>_plus_minus
 endmethod.
 
 
-method SUB_FROM_ELEMENT.
-   data:
-    val type decfloat34.
+method sub_from_element.
+  data:
+   val type decfloat34.
 
   val = value.
   call method zcl_matrix=>_get_set_element
     exporting
-      dim      = dim
-      a        = me
-      row      = row
-      col      = col
-      sub_from = abap_true
+      dim       = dim
+      row       = row
+      col       = col
+      sub_from  = abap_true
     changing
-      value = val.
-
+      container = me->container
+      value     = val.
 endmethod.
 
 
-method SUB_FROM_ELEMENTS.
- data:
-    val type decfloat34.
+method sub_from_elements.
+  data:
+     val type decfloat34.
 
   val = value.
   call method zcl_matrix=>_get_set_element
     exporting
-      dim      = dim
-      a        = a
-      row      = row
-      col      = col
-      sub_from = abap_true
+      dim       = dim
+      row       = row
+      col       = col
+      sub_from  = abap_true
     changing
-      value = val.
-  endmethod.
+      container = a->container
+      value     = val.
+endmethod.
 
 
 method swap_rows.
@@ -1839,23 +1839,22 @@ method _get_set_element.
   else.
     return.
   endif.
-  if zcl_utilities=>is_same_kind( kind_a = a->kind var  = ref #( value ) ).
-    if a->dim-row >= dim_-row and a->dim-col >= dim_-col.
-      assign a->container->* to <fs_a>.
-      assign component dim_-col of structure <fs_a>[ dim_-row ] to <fs_c>.
-      assign value to <fs_v>.
-      if set = abap_true.
-        if add_to = abap_true.
-          <fs_c> = <fs_c> + <fs_v>.
-        elseif sub_from = abap_true.
-          <fs_c> = <fs_c> - <fs_v>.
-        else.
-          <fs_c> = <fs_v>.
-        endif.
-      else.
-        <fs_v> = <fs_c>.
-      endif.
+  assign container->* to <fs_a>.
+  check dim_-col <= lines( <fs_a> ) and dim_-row <= lines( <fs_a> ) and dim_-col > 0 and dim_-row > 0.
+  assign component dim_-col of structure <fs_a>[ dim_-row ] to <fs_c>.
+  check <fs_c> is assigned.
+  assign value to <fs_v>.
+  if set = abap_true.
+    if add_to = abap_true.
+      <fs_c> = <fs_c> + <fs_v>.
+    elseif sub_from = abap_true.
+      <fs_c> = <fs_c> - <fs_v>.
+    else.
+      <fs_c> = <fs_v>.
     endif.
+    <fs_v> = <fs_c>.
+  else.
+    <fs_v> = <fs_c>.
   endif.
 endmethod.
 

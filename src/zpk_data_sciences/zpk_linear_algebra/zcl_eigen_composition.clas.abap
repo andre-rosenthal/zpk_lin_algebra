@@ -67,12 +67,36 @@ public section.
     exporting
       !EIGENVALUES type ref to ZCL_VECTOR
       !EIGENVECTORS type ref to ZCL_MATRIX .
+  class-methods POWER_METHOD_MACRO
+    importing
+      !A type ref to ZCL_MATRIX
+      !COLUMN_VIEW type BOOLEAN default ABAP_TRUE
+      !MAX_ITERATIONS type I default 100
+      !FREQUENCY type I default 10
+      !EPSILON type DECFLOAT34 default '1.0E-7'
+    exporting
+      !EIGENVALUES type ref to ZCL_VECTOR
+      !EIGENVECTORS type ref to ZCL_MATRIX .
   class-methods RUTISHAUSER_LR_TRANSFORMATION
     importing
       !A type ref to ZCL_MATRIX
-      !EPSILON_1 type DECFLOAT34 default '1.0E-7'
-      !EPSILON_2 type DECFLOAT34 default '1.0E-3'
-      !EPSILON_3 type DECFLOAT34 default '1.0E-4'
+      !EPSILON_1 type DECFLOAT34 default '1.0E-10'
+      !EPSILON_2 type DECFLOAT34 default '1.0E-6'
+      !EPSILON_3 type DECFLOAT34 default '1.0E-8'
+      !EPSILON_4 type DECFLOAT34 default '1.0E-1'
+      !FREQUENCY type I default 5
+      !SWEEP type BOOLEAN default ABAP_TRUE
+      !COLUMN_VIEW type BOOLEAN default ABAP_TRUE
+      !MAX_ITERATIONS type I default 500
+    exporting
+      !EIGENVALUES type ref to ZCL_VECTOR
+      !EIGENVECTORS type ref to ZCL_MATRIX .
+  class-methods RUTISHAUSER_LR_TRANSFORMATION1
+    importing
+      !A type ref to ZCL_MATRIX
+      !EPSILON_1 type DECFLOAT34 default '1.0E-10'
+      !EPSILON_2 type DECFLOAT34 default '1.0E-6'
+      !EPSILON_3 type DECFLOAT34 default '1.0E-8'
       !EPSILON_4 type DECFLOAT34 default '1.0E-1'
       !FREQUENCY type I default 5
       !SWEEP type BOOLEAN default ABAP_TRUE
@@ -220,10 +244,6 @@ CLASS ZCL_EIGEN_COMPOSITION IMPLEMENTATION.
           l        = l                 " π SAP : Matrices
           u        = u                 " π SAP : Matrices
           singular = singular.
-*      if singular = abap_true.
-*        free: eigenvalues, a_new, l, u.
-*        return.
-*      endif.
       a_old = zcl_matrix=>multiplications( a = u b = l ).
       deref a_old <fs_ao>.
       for i dim-row.
@@ -525,7 +545,7 @@ endmethod.
 endmethod.
 
 
-  method power_method.
+  method POWER_METHOD.
 * Code ported from IBM 370 Assembler original date 1978
     data:
       b      type ref to zcl_matrix,
@@ -655,6 +675,137 @@ endmethod.
 endmethod.
 
 
+  method POWER_METHOD_MACRO.
+    include zic_matrix_macros.
+* Code ported from IBM 370 Assembler original date 1978
+    data:
+      b         type ref to zcl_matrix,
+      c         type ref to zcl_matrix,
+      d         type ref to zcl_matrix,
+      id        type ref to zcl_matrix,
+      u         type ref to zcl_matrix,
+      v         type ref to zcl_vector,
+      v0        type ref to zcl_vector,
+      y         type ref to zcl_vector,
+      lambda    type ref to zcl_vector,
+      lhs       type decfloat34,
+      rhs       type decfloat34,
+      i         type i,
+      j         type i,
+      l         type decfloat34,
+      l0        type decfloat34,
+      k         type i,
+      n         type i,
+      m         type i,
+      converged type boolean,
+      dim       type zcl_utilities=>dimension.
+    field-symbols:
+      <fs_a>   type standard table,
+      <fs_b>   type standard table,
+      <fs_c>   type standard table,
+      <fs_d>   type standard table,
+      <fs_id>  type standard table,
+      <fs_y>   type standard table,
+      <fs_u>   type standard table,
+      <fs_v>   type standard table,
+      <fs_v0>  type standard table,
+      <fs_lb>  type standard table,
+      <fs_egl> type standard table,
+      <fs_egv> type standard table.
+
+    deref a <fs_a>.
+    preparem b <fs_b> a.
+    preparem c <fs_c> a.
+    preparem d <fs_d> a.
+    preparem id <fs_id> a.
+    preparem u <fs_u> a.
+    preparev v <fs_v> a.
+    preparerv v0 <fs_v0> a.
+    preparev lambda <fs_lb> a.
+    preparem eigenvectors <fs_egv> a.
+    preparev eigenvalues <fs_egl> a.
+* Make B and ID as identity
+    dim = a->dimension( ).
+    n = dim-row.
+    b->identity( ).
+    id->identity( ).
+
+* B hosts the repeated product matrix B = (A-lambdaID)
+    forx i 1 n.
+      v0->all_one( ).
+* Modify starting vector v0 so that it is orthogonal to all previously computed eigenvectors
+      matvec v b v0.
+      veclen l0 v.
+* perform successive power method iterations ...
+      forx m 1 max_iteration.
+* periodically re-orthogonize v
+          lhs = ( m / frequency ).
+          if ( lhs * frequency eq m ).
+            matvec y b v.
+            veclen l y.
+            if l > 0.
+              v = scavec( s = one / l x = y ).
+            endif.
+          endif.
+* compute new vector v
+          matvec y a v.
+          veclen l y.
+          if l <> 0.
+            v ?= scavec( s = one / l x = y ).
+          else.
+            sy-subrc = 24.
+            return.
+          endif.
+* check for convergency - if no convergency do not attempt to calculate
+          if l0 <> 0 and l0 <> l and abs( ( l - l0 ) / l0 ) lt epsilon.
+            converged = abap_true.
+            exit.
+          endif.
+          l0 = l.
+      endfor m.
+      sy-subrc = 8.
+      if converged = abap_true.
+        sy-subrc = 0.
+* calculate the sign of the eigenvalue
+        matvec y a v.
+        forx k 1 n.
+          if abs( v->get_element( k ) ) >= + '1.0E-3'.
+            lhs = v->get_element( k ).
+            rhs = y->get_element( k ).
+            if lhs * rhs < zero.
+              l = - l.
+            endif.
+            exit.
+          endif.
+        endfor k.
+        lambda->set_element( i = i value = l ).
+        forx k 1 n.
+          u->set_element( row = k col = i value = v->get_element( k ) ).
+        endfor k.
+        if i lt n.
+          scamat c id l.
+          matsub d a c.
+          matmul c d b.
+          mateq b c.
+        endif.
+      else.
+        return.
+      endif.
+    endfor i.
+* Move the calculated values to the exporting parameters
+* Eigenvalues -> diagonal of transformed matrix B.
+    forx i 1 n.
+      lhs = lambda->get_element( i ).
+      eigenvalues->set_element( i = i value = lhs ).
+    endfor i.
+* Eigenvectors are columns of U
+    <fs_egv>[] = <fs_u>[].
+    if column_view = abap_false.
+      eigenvectors->transpose( ).
+    endif.
+endmethod.
+
+
   method qr_decomposition.
     data:
       i   type i,
@@ -720,12 +871,580 @@ endmethod.
 method rutishauser_lr_transformation.
 * Converted from IBM Assembler 370 code written in 1978
   data:
+    b         type ref to zcl_matrix,
+    u         type ref to zcl_matrix,
+    x         type ref to zcl_matrix,
+    v         type ref to zcl_vector,
+    i         type i,
+    it        type i,
+    j         type i,
+    n         type i,
+    o         type i,
+    p         type i,
+    sum       type decfloat34,
+    sbsum     type decfloat34,
+    norm      type decfloat34,
+    val1      type decfloat34,
+    val2      type decfloat34,
+    lhs       type decfloat34,
+    rhs       type decfloat34,
+    iter      type i,
+    l         type i,
+    k         type i,
+    leave     type boolean,
+    skip      type boolean,
+    too_close type boolean,
+    dim       type zcl_utilities=>dimension.
+  field-symbols:
+    <fs_b>        type standard table,
+    <fs_x>        type standard table,
+    <fs_a>        type standard table,
+    <fs_u>        type standard table,
+    <fs_a1>       type standard table,
+    <fs_egl>      type standard table,
+    <fs_egv>      type standard table,
+    <fs_v>        type standard table,
+    <fs_k>        type any,
+    <fs_i>        type any,
+    <fs_j>        type any,
+    <fs_x_i>      type any,
+    <fs_x_k>      type any,
+    <fs_b_k>      type any,
+    <fs_b_i>      type any,
+    <fs_bi>       type any,
+    <fs_bj>       type any,
+    <fs_bik>      type any,
+    <fs_bjk>      type any,
+    <fs_bii>      type any,
+    <fs_ii_less1> type any,
+    <fs_bij>      type any,
+    <fs_bkj>      type any,
+    <fs_bjj>      type any,
+    <fs_ii>       type any,
+    <fs_ij>       type any,
+    <fs_vk>       type any,
+    <fs_vi>       type any,
+    <fs_jj>       type any,
+    <fs_xij>      type any,
+    <fs_xii>      type any,
+    <fs_xkj>      type any,
+    <fs_xik>      type any.
+
+
+
+
+* Initialize with zeros is the defaut
+  preparem b <fs_b> a.
+  preparem x <fs_x> a.
+  preparem u <fs_u> a.
+  deref a <fs_a>.
+  preparem eigenvectors <fs_egv> a.
+  n = a->dimension( )-row.
+  dim = a->dimension( ).
+  preparev eigenvalues <fs_egl> a.
+  preparev v <fs_v> a.
+  <fs_b>[] = <fs_a>[].
+* start left transformation iterating until tolerance or max iterations
+  do max_iterations times.
+* decompose b into lower and upper triangular matrices
+* sum += B[i,k]*B[k,j]
+    do n times.
+      i = sy-index - 1.
+      read table <fs_b> assigning <fs_bi> index i + 1.
+      if sy-subrc = 0.
+        do n times.
+          j = sy-index - 1.
+          do n times.
+            k = sy-index - 1.
+            assign component k + 1 of structure <fs_bi> to <fs_bik>.
+            read table <fs_b> assigning <fs_k> index k + 1.
+            if sy-subrc = 0.
+              assign component j + 1 of structure <fs_k> to <fs_bkj>.
+              if <fs_bik> is assigned and <fs_bkj> is assigned.
+                sum = sum + <fs_bik> * <fs_bkj>.
+              endif.
+            endif.
+          enddo.
+        enddo.
+      endif.
+    enddo.
+* B[i,j] -= sum.
+    do n times.
+      i = sy-index - 1.
+      read table <fs_b> assigning <fs_i> index i + 1.
+      if sy-subrc = 0.
+        do n times.
+          j = sy-index - 1.
+          assign component j + 1 of structure <fs_i> to <fs_bij>.
+          if <fs_bij> is assigned.
+            <fs_bij> = <fs_bij> - sum.
+          endif.
+        enddo.
+      endif.
+    enddo.
+* sum += B[i,k]*B[k,j]
+    sum = zero.
+    do n times.
+      i = sy-index - 1.
+      read table <fs_b> assigning <fs_i> index i + 1.
+      if sy-subrc = 0.
+        do n times.
+          j = sy-index - 1.
+          do n times.
+            k = sy-index - 1.
+            assign component k + 1 of structure <fs_i> to <fs_bik>.
+            read table <fs_b> assigning <fs_k> index k + 1.
+            if sy-subrc = 0.
+              assign component j + 1 of structure <fs_k> to <fs_bkj>.
+              if <fs_bik> is assigned and <fs_bkj> is assigned.
+                sum = sum + <fs_bik> * <fs_bkj>.
+              endif.
+            endif.
+          enddo.
+        enddo.
+      endif.
+    enddo.
+* B[i,j] -= sum / B[j,j]
+    do n times.
+      i = sy-index - 1.
+      read table <fs_b> assigning <fs_i> index i + 1.
+      if sy-subrc = 0.
+        do n times.
+          j = sy-index - 1.
+          assign component j + 1 of structure <fs_i> to <fs_bij>.
+          read table <fs_b> assigning <fs_j> index j + 1.
+          if sy-subrc = 0.
+            assign component j + 1 of structure <fs_j> to <fs_bjj>.
+            if <fs_bij> is assigned and <fs_bjj> is assigned and <fs_bjj> <> 0.
+              <fs_bij> = <fs_bij> - ( sum / <fs_bjj> ).
+            endif.
+          endif.
+        enddo.
+      endif.
+    enddo.
+* we now have the accumulated product of successive lower triangular matrix
+* x[i,j] += b[i,j]
+    do n times.
+      i = sy-index - 1.
+      read table <fs_x> assigning <fs_x_i> index i + 1.
+      if sy-subrc = 0.
+        read table <fs_b> assigning <fs_b_i> index i + 1.
+        if sy-subrc = 0.
+          do n times.
+            j = sy-index - 1.
+            assign component j + 1 of structure <fs_x_i> to <fs_xij>.
+            assign component j + 1 of structure <fs_b> to <fs_bij>.
+            if <fs_xij> is assigned and <fs_bij> is assigned.
+              <fs_xij> = <fs_xij> + <fs_bij>.
+            endif.
+          enddo.
+        endif.
+      endif.
+    enddo.
+* x[i,j] += x[i,k]*B[k,j]
+    do n times.
+      i = sy-index - 1.
+      read table <fs_x> assigning <fs_x_i> index i + 1.
+      if sy-subrc = 0.
+        do n times.
+          j = sy-index - 1.
+          assign component j + 1 of structure <fs_x_i> to <fs_xij>.
+          do n times.
+            k = sy-index - 1.
+            assign component k + 1 of structure <fs_x_i> to <fs_xik>.
+            read table <fs_b> assigning <fs_b_i> index k + 1.
+            if sy-subrc = 0.
+              assign component j + 1 of structure <fs_b_i> to <fs_bkj>.
+              if <fs_xik> is assigned and <fs_bkj> is assigned.
+                <fs_xij> = <fs_xij> + <fs_xik> * <fs_bkj>.
+              endif.
+            endif.
+          enddo.
+        enddo.
+      endif.
+    enddo.
+* combine the factors in reverse order
+*  B[i,j] *= B[i,i]
+    do n times.
+      i = sy-index - 1.
+      read table <fs_b> assigning <fs_i> index i + 1.
+      if sy-subrc = 0.
+        assign component i + 1 of structure <fs_i> to <fs_bii>.
+        do n times.
+          j = sy-index - 1.
+          assign component j + 1 of structure <fs_i> to <fs_bij>.
+          if <fs_bij> is assigned and <fs_bii> is assigned.
+            <fs_bij> = <fs_bij> * <fs_bii>.
+          endif.
+        enddo.
+      endif.
+    enddo.
+* next B[i,j] += B[i,k]*B[k,j]
+    do n times.
+      i = sy-index - 1.
+      read table <fs_b> assigning <fs_i> index i + 1.
+      if sy-subrc = 0.
+        do n times.
+          j = sy-index - 1.
+          assign component j + 1 of structure <fs_i> to <fs_bij>.
+          do n times.
+            k = sy-index - 1.
+            assign component k + 1 of structure <fs_i> to <fs_bik>.
+            read table <fs_b> assigning <fs_k> index k + 1.
+            if sy-subrc = 0.
+              assign component j + 1 of structure <fs_k> to <fs_bkj>.
+              if <fs_bik> is assigned and <fs_bkj> is assigned.
+                <fs_bij> = <fs_bij> + <fs_bik> * <fs_bkj>.
+              endif.
+            endif.
+          enddo.
+        enddo.
+      endif.
+    enddo.
+* ABS(B[i,j]) < eps1 ? B[i,j] = zero
+    do n times.
+      i = sy-index - 1.
+      read table <fs_b> assigning <fs_i> index i + 1.
+      if sy-subrc = 0.
+        do n times.
+          j = sy-index - 1.
+          assign component j + 1 of structure <fs_i> to <fs_bij>.
+          if <fs_bij> is assigned and abs( <fs_bij> ) < epsilon_1.
+            <fs_bij> = zero.
+          endif.
+        enddo.
+      endif.
+    enddo.
+* subsum += abs( b[i,i-1] )
+    do n times.
+      i = sy-index - 1.
+      if i = 0.
+        continue.
+      endif.
+      read table <fs_b> assigning <fs_i> index i + 1.
+      if sy-subrc = 0.
+        assign component i of structure <fs_i> to <fs_ii_less1>.
+        if <fs_ii_less1> is assigned.
+          sbsum = sbsum + abs( <fs_ii_less1> ).
+        endif.
+      endif.
+    enddo.
+* determine the column vector for sweeping procedure
+* if diagonal elements are too close we cannot proceed ..
+*  abs(b[j,j]-b[i,i]) < epsilon2
+    do n times.
+      i = sy-index - 1.
+      read table <fs_b> assigning <fs_i> index i + 1.
+      if sy-subrc = 0.
+        assign component i + 1 of structure <fs_i> to <fs_bii>.
+        if <fs_bii> is assigned.
+          do n times.
+            j = sy-index - 1.
+            read table <fs_b> assigning <fs_j> index j + 1.
+            if sy-subrc = 0.
+              assign component j + 1 of structure <fs_j> to <fs_bjj>.
+              if <fs_bjj> is assigned and abs( <fs_bjj> - <fs_bii> ) < epsilon_2.
+                return.
+              endif.
+            endif.
+          enddo.
+        endif.
+      endif.
+    enddo.
+* the sum of the abs of the subdiagonal is now computed
+* subsum += abs( b[i,i-1] )
+    do n times.
+      i = sy-index - 1.
+      if i = 0.
+        continue.
+      endif.
+      read table <fs_b> assigning <fs_i> index i + 1.
+      if sy-subrc = 0.
+        assign component i of structure <fs_i> to <fs_ii_less1>.
+        if <fs_ii_less1> is assigned.
+          sbsum = sbsum + abs( <fs_ii_less1> ).
+        endif.
+      endif.
+    enddo.
+* determine the column vector for sweeping procedure
+* recheck if diagonal elements are too close we cannot proceed ..?
+* abs(b[j,j]-b[i,i]) < epsilon2 : return
+    do n times.
+      i = sy-index - 1.
+      read table <fs_b> assigning <fs_i> index i + 1.
+      if sy-subrc = 0.
+        assign component i + 1 of structure <fs_i> to <fs_bii>.
+        if <fs_bii> is assigned.
+          do n times.
+            j = sy-index - 1.
+            read table <fs_b> assigning <fs_j> index j + 1.
+            if sy-subrc = 0.
+              assign component j + 1 of structure <fs_j> to <fs_bjj>.
+              if <fs_bjj> is assigned and abs( <fs_bjj> - <fs_bii> ) < epsilon_2.
+                return.
+              endif.
+            endif.
+          enddo.
+        endif.
+      endif.
+    enddo.
+* v[i] = b[i,j]
+    do n times.
+      i = sy-index - 1.
+      read table <fs_b> assigning <fs_i> index i + 1.
+      if sy-subrc = 0.
+        do n times.
+          j = sy-index - 1.
+          assign component j + 1 of structure <fs_i> to <fs_bij>.
+          if <fs_bij> is assigned.
+            read table <fs_v> assigning <fs_vi> index i + 1.
+            <fs_vi> = <fs_bij>.
+            <fs_v>[ i + 1 ] = <fs_vi>.
+          endif.
+        enddo.
+      endif.
+    enddo.
+    do n times.
+      i = sy-index - 1.
+      read table <fs_b> assigning <fs_i> index i + 1.
+      if sy-subrc = 0.
+        read table <fs_v> assigning <fs_vi> index i + 1.
+        if sy-subrc = 0.
+          val1 = <fs_vi>.
+          do n times.
+            k = sy-index - 1.
+            assign component k + 1 of structure <fs_i> to <fs_bik>.
+            read table <fs_v> assigning <fs_vk> index k + 1.
+            if <fs_bik> is assigned and <fs_vk> is assigned.
+              val1 = val1 + <fs_bik> * <fs_vk>.
+            endif.
+          enddo.
+          <fs_vi> = val1.
+        endif.
+      endif.
+    enddo.
+* v[i] = v[i]/b[i,j] - b[i,i].
+    do n times.
+      i = sy-index - 1.
+      read table <fs_b> assigning <fs_i> index i + 1.
+      if sy-subrc = 0.
+        read table <fs_v> assigning <fs_vi> index i + 1.
+        if sy-subrc = 0.
+          do n times.
+            j = sy-index - 1.
+            assign component j + 1 of structure <fs_i> to <fs_bij>.
+            if <fs_bij> is assigned and <fs_bij> <> 0.
+              assign component i + 1 of structure <fs_i> to <fs_bii>.
+              if <fs_bii> is assigned.
+                <fs_vi> = <fs_vi> / <fs_bij> - <fs_bii>.
+              endif.
+              exit.
+            endif.
+          enddo.
+        endif.
+      endif.
+    enddo.
+* modify lower triangular product matrix
+* x[i,j] += v[k]
+    do n times.
+      i = sy-index - 1.
+      read table <fs_x> assigning <fs_x> index i + 1.
+      if sy-subrc = 0.
+        do n times.
+          j = sy-index - 1.
+          assign component j + 1 of structure <fs_x> to <fs_xij>.
+          do n times.
+            k = sy-index - 1.
+            read table <fs_v> assigning <fs_vk> index k + 1.
+            if <fs_xij> is assigned and <fs_vk> is assigned.
+              <fs_xij> = <fs_xij> + <fs_vk>.
+            endif.
+          enddo.
+        enddo.
+      endif.
+    enddo.
+* x[i,j] += x[i,k]*v[k]
+    do n times.
+      i = sy-index - 1.
+      read table <fs_x> assigning <fs_x> index i + 1.
+      if sy-subrc = 0.
+        do n times.
+          j = sy-index - 1.
+          assign component j + 1 of structure <fs_x> to <fs_xij>.
+          val1 = <fs_xij>.
+          do n times.
+            k = sy-index - 1.
+            assign component k + 1 of structure <fs_x> to <fs_xik>.
+            read table <fs_v> assigning <fs_vk> index k + 1.
+            if <fs_xik> is assigned and <fs_vk> is assigned.
+              val1 = val1 + <fs_xik> * <fs_vk>.
+            endif.
+          enddo.
+          <fs_xij> = val1.
+        enddo.
+      endif.
+    enddo.
+* b[i,j] += b[i,k]*v[k]
+    do n times.
+      i = sy-index - 1.
+      read table <fs_b> assigning <fs_b> index i + 1.
+      if sy-subrc = 0.
+        do n times.
+          j = sy-index - 1.
+          assign component j + 1 of structure <fs_b> to <fs_bij>.
+          val1 = <fs_bij>.
+          do n times.
+            k = sy-index - 1.
+            assign component k + 1 of structure <fs_b> to <fs_bik>.
+            read table <fs_v> assigning <fs_vk> index k + 1.
+            if <fs_bik> is assigned and <fs_vk> is assigned.
+              val1 = val1 + <fs_bik> * <fs_vk>.
+            endif.
+          enddo.
+          <fs_bij> = val1.
+        enddo.
+      endif.
+    enddo.
+* premultiply b with inverse of sweeping matrix
+* next b[i,k] -= v[i] * b[j,k]
+    do n times.
+      i = sy-index - 1.
+      read table <fs_b> assigning <fs_bi> index i + 1.
+      if sy-subrc = 0.
+        read table <fs_v> assigning <fs_vi> index i + 1.
+        if sy-subrc = 0.
+          do n times.
+            k = sy-index - 1.
+            assign component k + 1 of structure <fs_bi> to <fs_bik>.
+            do n times.
+              j = sy-index - 1.
+              read table <fs_b> assigning <fs_bj> index j + 1.
+              if sy-subrc = 0.
+                assign component k + 1 of structure <fs_bj> to <fs_bjk>.
+                if <fs_bik> is assigned and <fs_bjk> is assigned and <fs_vi> is assigned.
+                  <fs_bik> = <fs_bik> - <fs_vi> * <fs_bjk>.
+                endif.
+              endif.
+            enddo.
+          enddo.
+        endif.
+      endif.
+    enddo.
+    if sbsum lt epsilon_1.
+      exit.
+    endif.
+  enddo.
+* All kosher .. compute eigenvectors and eigenvalues of transformed matrix
+* next x[i,i] = 1
+  do n times.
+    i = sy-index - 1.
+    read table <fs_x> assigning <fs_x> index i + 1.
+    if sy-subrc = 0.
+      assign component i + 1 of structure <fs_x> to <fs_xii>.
+      if <fs_xii> is assigned.
+        <fs_xii> = 1.
+      endif.
+    endif.
+  enddo.
+* sum = b[i,j]
+  do n times.
+    i = sy-index - 1.
+    read table <fs_b> assigning <fs_b> index i + 1.
+    if sy-subrc = 0.
+      do n times.
+        j = sy-index - 1.
+        assign component j + 1 of structure <fs_b> to <fs_bij>.
+        if <fs_bij> is assigned.
+          sum = <fs_bij>.
+        endif.
+      enddo.
+    endif.
+  enddo.
+* sum += b[i,k] * x[k,j]
+  do n times.
+    i = sy-index - 1.
+    read table <fs_b> assigning <fs_b> index i + 1.
+    if sy-subrc = 0.
+      do n times.
+        j = sy-index - 1.
+        do n times.
+          k = sy-index - 1.
+          assign component k + 1 of structure <fs_b> to <fs_bik>.
+          read table <fs_x> assigning <fs_x> index k + 1.
+          if sy-subrc = 0.
+            assign component j + 1 of structure <fs_x> to <fs_xkj>.
+            if <fs_bik> is assigned and <fs_xkj> is assigned.
+              sum = sum + <fs_bik> * <fs_xkj>.
+            endif.
+          endif.
+        enddo.
+      enddo.
+    endif.
+  enddo.
+* x[i,j] = sum / b[j,j] - b[i,i]
+  do n times.
+    i = sy-index - 1.
+    read table <fs_b> assigning <fs_bi> index i + 1.
+    if sy-subrc = 0.
+      do n times.
+        j = sy-index - 1.
+        read table <fs_b> assigning <fs_bj> index j + 1.
+        if sy-subrc = 0.
+          assign component j + 1 of structure <fs_bj> to <fs_bjj>.
+          assign component i + 1 of structure <fs_bi> to <fs_bii>.
+          read table <fs_x> assigning <fs_x> index i + 1.
+          if sy-subrc = 0.
+            assign component j + 1 of structure <fs_x> to <fs_bij>.
+            if <fs_bij> is assigned and <fs_bjj> is assigned and <fs_bii> is assigned and <fs_bjj> <> 0.
+              <fs_bij> = sum / <fs_bjj> - <fs_bii>.
+            endif.
+          endif.
+        endif.
+      enddo.
+    endif.
+  enddo.
+* Normalize the eigenvectors
+  j = 1.
+  while j <= n.
+    sum = zero.
+    i = 1.
+    while i <= n.
+      sum = sum + u->get_element( row = i col = j ) ** 2.
+      add 1 to i.
+    endwhile.
+    norm = sqrt( sum ).
+    i = 1.
+    while i <= n.
+      lhs = u->get_element( row = i col = j ).
+      u->set_element( row = i col = j value = ( lhs / norm ) ).
+      add 1 to i.
+    endwhile.
+* Move the calculated values to the exporting parameters
+* Eigenvalues -> diagonal of transformed matrix B.
+    i = 1.
+    while i <= n.
+      lhs = b->get_element( row = i col = i ).
+      eigenvalues->set_element( i = i value = lhs ).
+      add 1 to i.
+    endwhile.
+    add 1 to j.
+  endwhile.
+* Eigenvectors are columns of U
+  <fs_egv>[] = <fs_u>[].
+  if column_view = abap_false.
+    eigenvectors->transpose( ).
+  endif.
+  free: x, v, u, b.
+endmethod.
+
+
+method RUTISHAUSER_LR_TRANSFORMATION1.
+* Converted from IBM Assembler 370 code written in 1978
+  data:
     b     type ref to zcl_matrix,
     u     type ref to zcl_matrix,
     x     type ref to zcl_matrix,
     v     type ref to zcl_vector,
-    begin type ref to zcl_vector,
-    end   type ref to zcl_vector,
     i     type i,
     it    type i,
     im1   type i,
@@ -740,6 +1459,9 @@ method rutishauser_lr_transformation.
     j_hi  type i,
     k_low type i,
     k_hi  type i,
+    n     TYPE i,
+    o     TYPE i,
+    p     type i,
     sum   type decfloat34,
     sbsum type decfloat34,
     norm  type decfloat34,
@@ -750,10 +1472,10 @@ method rutishauser_lr_transformation.
     iter  type i,
     l     type i,
     k     type i,
-    n     type i,
     nm1   type i,
     leave type boolean,
     skip  type boolean,
+    too_close type boolean,
     dim   type zcl_utilities=>dimension.
   field-symbols:
     <fs_b>   type standard table,
@@ -761,8 +1483,6 @@ method rutishauser_lr_transformation.
     <fs_a>   type standard table,
     <fs_u>   type standard table,
     <fs_a1>  type standard table,
-    <fs_beg> type standard table,
-    <fs_end> type standard table,
     <fs_egl> type standard table,
     <fs_egv> type standard table,
     <fs_v>   type standard table.
@@ -779,304 +1499,265 @@ method rutishauser_lr_transformation.
   dim = a->dimension( ).
   preparev eigenvalues <fs_egl> a.
   preparev v <fs_v> a.
-  preparev begin <fs_beg> a.
-  preparev end <fs_end> a.
-  forx j 1 n.
-  <fs_beg>[ j ] = 1.
-  <fs_end>[ j ] = n.
-endfor j.
-* initial tridiagonal startup
-*  <fs_beg>[ 1 ] = 1.
-*  <fs_beg>[ n ] = nm1.
-*  <fs_end>[ 1 ] = 2.
-*  <fs_end>[ n ] = n.
-*  if n > 2.
-*    forx j 2 nm1.
-*      <fs_beg>[ j ] = j - 1.
-*      <fs_end>[ j ] = j + 1.
-*    endfor j.
-*  endif.
-*  forx i 1 n.
-*    j_low = <fs_beg>[ i ].
-*    j_hi = <fs_end>[ i ].
-*    forx j j_low j_hi.
-*      lhs = a->get_element( row = i col = j ).
-*      b->set_element( row = i col = j value = lhs ).
-*    endfor j.
-*  endfor i.
-<fs_b>[] = <fs_a>[].
+  <fs_b>[] = <fs_a>[].
 * start left transformation iterating until tolerance or max iterations
-forx iter 1 max_iterations.
-*   decompose b into lower and upper triangular matrices
-forx j 1 n.
-i_low = <fs_beg>[ j ].
-forx i i_low j.
-sum = zero.
-im1 = i - 1.
-k_low = <fs_beg>[ i ].
+  forx iter 1 max_iterations.
+* decompose b into lower and upper triangular matrices
+    forx j 1 n.
+      forx i 1 j.
+        sum = zero.
+        im1 = i - 1.
+        forx k 1 im1.
 * sum += B[i,k]*B[k,j]
-forx k k_low im1.
-lhs = b->get_element( row = i col = k ).
-rhs = b->get_element( row = k col = j ).
-sum = sum + ( lhs * rhs ).
-endfor k.
+          lhs = b->get_element( row = i col = k ).
+          rhs = b->get_element( row = k col = j ).
+          sum = sum + ( lhs * rhs ).
+        endfor k.
 * B[i,j] -= sum.
-b->sub_from_element( row = i col = j value = sum ).
-endfor i.
-jp1 = j + 1.
-i_hi = <fs_end>[ j ].
-forx i jp1 i_hi.
-sum = zero.
-k_low = <fs_beg>[ i ].
-jm1 = j - 1.
+        b->sub_from_element( row = i col = j value = sum ).
+      endfor i.
+      jp1 = j + 1. "15.
+      if jp1 <= n.
+         forx i 1 i_hi.
+          sum = zero.
+          jm1 = j - 1.
 * sum += B[i,k]*B[k,j]
-forx k k_low jm1.
-lhs = b->get_element( row = i col = k ).
-rhs = b->get_element( row = k col = j ).
-sum = sum + ( lhs * rhs ).
-endfor k.
+          forx k 1 jm1.
+             lhs = b->get_element( row = i col = k ).
+             rhs = b->get_element( row = k col = j ).
+             sum = sum + ( lhs * rhs ).
+          endfor k.
 * B[i,j] = (B[i,j] - sum) / B[j,j]
-lhs = b->get_element( row = i col = j ).
-lhs = lhs - sum.
-rhs = b->get_element( row = j col = j ).
-b->set_element( row = i col = j value = lhs / rhs ).
-endfor i.
-endfor j.
+          lhs = b->get_element( row = i col = j ).
+          lhs = lhs - sum.
+          rhs = b->get_element( row = j col = j ).
+          b->set_element( row = i col = j value = lhs / rhs ).
+         endfor i.
+      endif.
+    endfor j. "10
 * we now have the accumulated product of successive lower triangular matrix
-for_i 2 n.
-im1 = i - 1.
+    forx i 2 n.
+      im1 = i - 1.
 * x[i,j] += b[i,j]
-forx j 1 im1.
-lhs = b->get_element( row = i col = j ) .
-x->add_to_element( row = i col = j value = lhs ).
-k_low = j + 1.
+      forx j 1 im1.
+        lhs = b->get_element( row = i col = j ) .
+        x->add_to_element( row = i col = j value = lhs ).
+        k_low = j + 1.
 * x[i,j] += x[i,k]*B[k,j]
-forx k k_low im1.
-lhs = x->get_element( row = i col = k ).
-rhs = b->get_element( row = k col = j ).
-x->add_to_element( row = i col = j value = lhs * rhs ).
-endfor k.
-endfor j.
-endfor i.
+        forx k k_low im1.
+          lhs = x->get_element( row = i col = k ).
+          rhs = b->get_element( row = k col = j ).
+          x->add_to_element( row = i col = j value = lhs * rhs ).
+        endfor k.
+      endfor j.
+    endfor i. "17
 * combine the factors in reverse order
-forx i 1 n.
-j_low = <fs_beg>[ i ].
-im1 = i - 1.
-if j_low <= im1.
+    forx i 1 n.
+      im1 = i - 1.
+      if im1 < 1.
 * B[i,j] *= B[i,i]
-forx j j_low im1.
-lhs = b->get_element( row = i col = j ).
-rhs = b->get_element( row = i col = i ).
-b->set_element( row = i col = j value = lhs * rhs ).
-ip1 = i + 1.
-k_hi = <fs_end>[ i ].
+          forx j 1 im1.
+            lhs = b->get_element( row = i col = j ).
+            rhs = b->get_element( row = i col = i ).
+            b->set_element( row = i col = j value = lhs * rhs ).
+            ip1 = i + 1.
 * B[i,j] += B[i,k]*B[k,j]
-forx k ip1 k_hi.
-lhs = b->get_element( row = i col = k ).
-rhs = b->get_element( row = k col = j ).
-b->add_to_element( row = i col = j value = lhs * rhs ).
-endfor k.
-endfor j.
-endif.
-j_hi = <fs_end>[ i ].
-forx j i j_hi.
-jp1 = j + 1.
-k_hi = <fs_end>[ j ].
+            forx k ip1 n.
+              lhs = b->get_element( row = i col = k ).
+              rhs = b->get_element( row = k col = j ).
+              b->add_to_element( row = i col = j value = lhs * rhs ).
+            endfor k.
+          endfor j.
+      endif.
+      forx j i n.
+         jp1 = j + 1.
 * B[i,j] += B[i,k] * B[k,j]
-forx k jp1 k_hi.
-lhs =  b->get_element( row = i col = k ).
-rhs = b->get_element( row = k col = j ).
-b->add_to_element( row = i col = j value = lhs * rhs ).
-endfor k.
-endfor j.
-endfor i.
-forx i 1 n.
-j_low = <fs_beg>[ i ].
-j_hi = <fs_end>[ i ].
+         forx k jp1 n.
+            lhs =  b->get_element( row = i col = k ).
+            rhs = b->get_element( row = k col = j ).
+            b->add_to_element( row = i col = j value = lhs * rhs ).
+         endfor k.
+      endfor j.
+    endfor i."24
+    forx i 1 n.
 * ABS(B[i,j]) < eps1 ? B[i,j] = zero
 * zero element if lower than e
-forx j j_low j_hi.
-lhs = b->get_element( row = i col = j ).
-if abs( lhs ) lt e.
-b->set_element( row = i col = j value = zero ).
-endif.
-endfor j.
-endfor i.
-l = l + 1.
+      forx j 1 4.
+        lhs = b->get_element( row = i col = j ).
+        if abs( lhs ) lt e.
+          b->set_element( row = i col = j value = zero ).
+        endif.
+      endfor j.
+    endfor i."25
+    l = l + 1.
 * the sum of the abs of the subdiagonal is now computed
-sbsum = zero.
+    sbsum = zero.
 * subsum += abs( b[i,i-1] )
-forx i 2 n.
-im1 = i - 1.
-lhs = b->get_element( row = i col = im1 ).
-sbsum = sbsum + abs( lhs ).
-endfor i.
+    forx i 2 n.
+      lhs = b->get_element( row = i col = i - 1 ).
+      sbsum = sbsum + abs( lhs ).
+    endfor i.
 * determine the column vector for sweeping procedure
-if sbsum ge epsilon_4 and l <> frequency.
+    if sbsum lt epsilon_4 or l eq frequency.
 * if diagonal elements are too close we cannot proceed .. abs(b[j,j]-b[i,i]) < epsilon2 ...
-forx j 1 nm1.
-forx i 1 n.
-lhs = b->get_element( row = j col = j ).
-rhs = b->get_element( row = i col = i ).
-if j = 1 or abs( lhs  - rhs ) lt epsilon_2 .
-exit.
-endif.
-endfor i.
-jp1 = j + 1.
+      forx j 1 nm1.
+        too_close = abap_false.
+        forx i 1 n.
+          lhs = b->get_element( row = j col = j ).
+          rhs = b->get_element( row = i col = i ).
+          val1 = abs( lhs  - rhs ).
+          if j <> 1 and val1 <> 0 and val1 lt epsilon_2 .
+            too_close = abap_true.
+          endif.
+        endfor i.
+        if too_close = abap_false.
+          jp1 = j + 1.
 * v[i] = b[i,j]
-forx it jp1 n.
-i = n + jp1 - it.
-lhs = b->get_element( row = i col = j ).
-v->set_element( i = i value = lhs ).
-ip1 = i + 1.
+          forx it jp1 n.
+            i = n + jp1 - it.
+            lhs = b->get_element( row = i col = j ).
+            v->set_element( i = i value = lhs ).
+            ip1 = i + 1.
 * v[i] += b[i,k] * v[k]
-forx k ip1 n.
-lhs = b->get_element( row = i col = k ).
-rhs = v->get_element( k ).
-v->add_to_element( i = i value = lhs * rhs ).
-endfor k.
+            if i <> n.
+              forx k ip1 n.
+                lhs = b->get_element( row = i col = k ).
+                rhs = v->get_element( k ).
+                v->add_to_element( i = i value = lhs * rhs ).
+              endfor k.
 * v[i] = v[i]/b[i,j] - b[i,i].
-lhs = <fs_v>[ i ].
-lhs = lhs / b->get_element( row = i col = j ).
-rhs = b->get_element( row = i col = i ).
-v->set_element( i = i value = lhs - rhs ).
-endfor it.
+              lhs = <fs_v>[ i ].
+              lhs = lhs / b->get_element( row = i col = j ).
+              rhs = b->get_element( row = i col = i ).
+              v->set_element( i = i value = lhs - rhs ).
+            endif.
+          endfor it.
 * modify lower triangular product matrix
 * x[i,j] += v[k]
-forx it jp1 n.
-i = n + jp1 - it.
-lhs = v->get_element( i ).
-x->add_to_element( row = i col = j value = lhs ).
-im1 = i - 1.
+          forx it jp1 n.
+            i = n + jp1 - it.
+            lhs = v->get_element( i ).
+            x->add_to_element( row = i col = j value = lhs ).
+            im1 = i - 1.
 * x[i,j] += x[i,k]*v[k]
-forx k jp1 im1.
-lhs = x->get_element( row = i col = k ).
-rhs = v->get_element( k ).
-x->add_to_element( row = i col = j value = lhs * rhs ).
-endfor k.
-endfor it.
+            forx k jp1 im1.
+              lhs = x->get_element( row = i col = k ).
+              rhs = v->get_element( k ).
+              x->add_to_element( row = i col = j value = lhs * rhs ).
+            endfor k.
+          endfor it.
 * postmultiply b with sweeping matrix
 * b[i,j] += b[i,k]*v[k]
-forx i 1 n.
-forx k jp1 n.
-lhs = b->get_element( row = i col = k ).
-rhs = v->get_element( k ).
-b->add_to_element( row = i col = j value = lhs * rhs ).
-endfor k.
-endfor i.
+          forx i 1 n.
+            forx k jp1 n.
+              lhs = b->get_element( row = i col = k ).
+              rhs = v->get_element( k ).
+              b->add_to_element( row = i col = j value = lhs * rhs ).
+            endfor k.
+          endfor i.
 * premultiply b with inverse of sweeping matrix
 * b[i,k] -= v[i] * b[j,k]
-forx i jp1 n.
-forx k jp1 n.
-lhs = v->get_element( i ).
-rhs = b->get_element( row = j col = k ).
-b->sub_from_element( row = i col = k value = lhs * rhs ).
-endfor k.
-endfor i.
-endfor j.
-forx j 1 n.
-<fs_beg>[ j ] = 1.
-<fs_end>[ j ] = n.
-endfor j.
-endif.
+          forx i jp1 n.
+            forx k 1 n.
+              lhs = v->get_element( i ).
+              rhs = b->get_element( row = j col = k ).
+              b->sub_from_element( row = i col = k value = lhs * rhs ).
+            endfor k.
+          endfor i.
+        endif.
+      endfor j."37
+    endif. "42
 * Check for convergence
-if l ne frequency or iter ne max_iteration or sbsum gt epsilon_1.
-l = 0.
-endif.
-endfor iter.
-forx i 1 n.
-x->set_element( row = i col = i value = zero ).
-endfor i.
+    if too_close = abap_true.
+      return.
+    endif.
+    if l eq frequency or iter eq max_iteration or sbsum le epsilon_1.
+      l = 0.
+    endif.
+  endfor iter."51
+  forx i 1 n.
+    x->set_element( row = i col = i value = zero ).
+  endfor i.
 * check if two eingenvalues are closer together than epsilon 2
-if sbsum le epsilon_3.
-return.
-endif.
-forx i 1 n.
-ip1 = i + 1.
-forx j ip1 n.
-lhs = b->get_element( row = i col = i ).
-rhs = b->get_element( row = j col = j ).
-if abs( lhs - rhs ) < epsilon_2.
-exit.
-endif.
-endfor j.
-endfor i.
-* All kosher .. computer eigenvectors and eigenvalues of transformed matrix
-forx j 1 n.
-x->set_element( row = j col = j value = one ).
-if j <> 1.
-jm1 = j - 1.
-forx it 1 jm1.
-i = j - it.
+  if sbsum lt epsilon_3.
+    return.
+  endif.
+  forx i 1 nm1.
+    ip1 = i + 1.
+    forx j ip1 n.
+      lhs = b->get_element( row = i col = i ).
+      rhs = b->get_element( row = j col = j ).
+      if abs( lhs - rhs ) < epsilon_2.
+        return.
+      endif.
+    endfor j.
+  endfor i.
+* All kosher .. compute eigenvectors and eigenvalues of transformed matrix
+  forx j 1 n.
+    x->set_element( row = j col = j value = one ).
+    if j <> 1.
+      jm1 = j - 1.
+      forx it 1 jm1.
+        i = j - it.
 * sum = b[i,j]
-sum = b->get_element( row = i col = j ).
-ip1 = i + 1.
+        sum = b->get_element( row = i col = j ).
+        ip1 = i + 1.
 * sum += b[i,k] * x[k,j]
-forx k ip1 jm1.
-lhs = b->get_element( row = i col = k ).
-rhs = x->get_element( row = k col = j ).
-sum = sum + lhs * rhs.
-endfor k.
+        forx k ip1 jm1.
+          lhs = b->get_element( row = i col = k ).
+          rhs = x->get_element( row = k col = j ).
+          sum = sum + lhs * rhs.
+        endfor k.
 * x[i,j] = sum / b[j,j] - b[i,i]
-lhs = sum / b->get_element( row = j col = j ).
-rhs = b->get_element( row = i col = i ).
-x->set_element( row = i col = j value = lhs - rhs ).
-endfor it.
-endif.
-endfor j.
+        lhs = sum / b->get_element( row = j col = j ).
+        rhs = b->get_element( row = i col = i ).
+        x->set_element( row = i col = j value = lhs - rhs ).
+      endfor it.
+    endif.
+  endfor j.
 * Alles gut .. computer eigenvectors and eigenvalues of original matrix
-forx i 1 n.
-im1 = i - 1.
-if i <> 1.
-forx j 1 im1.
-lhs = x->get_element( row = i col = j ).
-u->set_element( row = i col = j value = lhs ).
-jm1 = j - 1.
+  forx i 1 n.
+    im1 = i - 1.
+    if i <> 1.
+      forx j 1 im1.
+        lhs = x->get_element( row = i col = j ).
+        u->set_element( row = i col = j value = lhs ).
+        jm1 = j - 1.
 * u[i,j] += x[i,k] * x[k,j]
-forx k 1 jm1.
-lhs = x->get_element( row = i col = k ).
-rhs = x->get_element( row = k col = j ).
-u->add_to_element( row = i col = j value = lhs * rhs ).
-endfor k.
-endfor j.
-endif.
-forx j 1 n.
-lhs = x->get_element( row = i col = j ).
-u->set_element( row = i col = j value = lhs ).
-im1 = i - 1.
-if i <> 1.
-forx k 1 im1.
-lhs = x->get_element( row = i col = k ).
-rhs = x->get_element( row = k col = j ).
-u->add_to_element( row = i col = j value = lhs * rhs ).
-endfor k.
-endif.
-endfor j.
-endfor i.
+        if j <> 1.
+          forx k 1 jm1.
+            lhs = x->get_element( row = i col = k ).
+            rhs = x->get_element( row = k col = j ).
+            u->add_to_element( row = i col = j value = lhs * rhs ).
+          endfor k.
+        endif.
+      endfor j.
+    endif.
+  endfor i.
 * Normalize the eigenvectors
-forx j 1 n.
-sum = zero.
-forx i 1 n.
-sum = sum + u->get_element( row = i col = j ) ** 2.
-endfor i.
-norm = sqrt( sum ).
-forx i 1 n.
-lhs = u->get_element( row = i col = j ).
-u->set_element( row = i col = j value = ( lhs / norm ) ).
-endfor i.
-endfor j.
+  forx j 1 n.
+    sum = zero.
+    forx i 1 n.
+      sum = sum + u->get_element( row = i col = j ) ** 2.
+    endfor i.
+    norm = sqrt( sum ).
+    forx i 1 n.
+      lhs = u->get_element( row = i col = j ).
+      u->set_element( row = i col = j value = ( lhs / norm ) ).
+    endfor i.
+  endfor j.
 * Move the calculated values to the exporting parameters
 * Eigenvalues -> diagonal of transformed matrix B.
-forx i 1 n.
-lhs = b->get_element( row = i col = i ).
-eigenvalues->set_element( i = i value = lhs ).
-endfor i.
+  forx i 1 n.
+    lhs = b->get_element( row = i col = i ).
+    eigenvalues->set_element( i = i value = lhs ).
+  endfor i.
 * Eigenvectors are columns of U
-free: x, v, begin, end.
-<fs_egv>[] = <fs_u>[].
-if column_view = abap_false.
-eigenvectors->transpose( ).
-endif.
+  <fs_egv>[] = <fs_u>[].
+  if column_view = abap_false.
+    eigenvectors->transpose( ).
+  endif.
+  free: x, v, u, b.
 endmethod.
 
 

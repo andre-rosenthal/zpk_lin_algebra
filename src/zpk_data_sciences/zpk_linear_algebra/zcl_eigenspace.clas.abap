@@ -14,7 +14,8 @@ class zcl_eigenspace definition
       mspace  type standard table of ref to zcl_matrix,
       vspace  type standard table of ref to zcl_vector,
       cspace  type standard table of ref to zcl_complex.
-
+    class-data:
+      lspace_ type lspace.
     class-methods class_constructor .
     methods constructor .
 
